@@ -1,0 +1,39 @@
+form { display: grid; gap: 1.5rem; margin-top: 1.5rem; }
+.secciones { display: grid; gap: 1rem; }
+.campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem 1rem; margin: .75rem 0; }
+.campo { gap: .35rem; }
+.registro { background: #f7fafb; border: 1px solid #e1eaed; border-radius: .75rem; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.titulo-registro, .acciones-registro, .linea-catalogo { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+.titulo-registro strong { font-size: .85rem; color: #355563; }
+.acciones-registro { justify-content: flex-end; }
+.linea-catalogo { margin-bottom: 1rem; flex-wrap: nowrap; }
+.linea-catalogo .campo { flex: 1; min-width: 0; }
+.ayuda, small { color: #718692; font-size: .75rem; line-height: 1.8; }
+.ayuda { margin: 0 0 1.2rem; }
+h3 { font-size: .9rem; }
+.opcion { display: flex; align-items: center; gap: .5rem; color: #476571; font-size: .8rem; padding: .5rem 0; }
+.error { color: #b42318; display: block; }
+.fila-identidad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; align-items: start; margin-top: .5rem; }
+.fila-identidad > .campo { min-width: 0; }
+.campos-demograficos { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem 1rem; align-items: start; }
+.campos-demograficos > div { min-width: 0; }
+.campos-demograficos p-select { width: 100%; }
+.campos-contactibilidad { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.campos-contactibilidad .campo { min-width: 0; }
+.campos-contactibilidad input { text-overflow: ellipsis; }
+.identificacion-resumen input { min-width: 0; text-overflow: ellipsis; }
+p-inputgroup { width: 100%; min-width: 0; }
+p-inputgroup > input, p-inputgroup > p-select, p-inputgroup > p-datepicker { min-width: 0; flex: 1 1 0; width: 0; }
+.barra-identificaciones { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.barra-identificaciones span { color: #476571; font-size: .85rem; }
+.fila-principal > td { background: #f0faf6; }
+.tabla-modal th, .tabla-modal td { vertical-align: middle; padding: .65rem .75rem; }
+.tabla-modal th:first-child, .tabla-modal td:first-child { width: 6.5rem; text-align: center; }
+.tabla-modal th:last-child, .tabla-modal td:last-child { width: 5.5rem; text-align: center; }
+.tabla-modal p-toggleswitch { display: inline-flex; vertical-align: middle; }
+.tabla-contactos th:nth-child(3), .tabla-contactos td:nth-child(3) { width: 35%; }
+.tabla-direcciones td { vertical-align: top; }
+.tabla-direcciones .campos { margin: 0; gap: .5rem .75rem; }
+.acciones-formulario { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.aviso-desarrollo { display: block; margin-top: .5rem; }
+@media (max-width: 760px) { .campos, .fila-identidad { grid-template-columns: 1fr; } .registro { padding: .75rem; } }

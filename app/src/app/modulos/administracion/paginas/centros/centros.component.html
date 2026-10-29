@@ -1,0 +1,116 @@
+<div class="cabecera-pagina">
+  <span class="sobretitulo">ADMINISTRACIÓN / ESTABLECIMIENTOS</span>
+  <h1>Centros de Salud</h1>
+  <p>Centros y sectores de la institución. Código interno y código DEIS son identificadores distintos.</p>
+</div>
+<p-toolbar aria-label="Acciones de centros de salud">
+  <ng-template #start><p-button label="Nuevo centro" icon="pi pi-plus" [disabled]="guardando()" (onClick)="editar()" /></ng-template>
+  <ng-template #end>
+    <div class="acciones-toolbar">
+      <p-inputgroup class="busqueda-centros"><input #busqueda pInputText aria-label="Buscar centros por código, nombre o DEIS" placeholder="Buscar centro" (input)="listado.filterGlobal(busqueda.value, 'contains')"><p-inputgroup-addon><i class="pi pi-search" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup>
+      <p-button label="Actualizar" icon="pi pi-refresh" ariaLabel="Actualizar centros" [disabled]="guardando()" [loading]="cargando()" (onClick)="cargar()" />
+    </div>
+  </ng-template>
+</p-toolbar>
+@if (error()) { <p-message severity="error" role="alert">{{ error() }}</p-message> }
+@if (aviso()) { <p-message severity="success" role="status">{{ aviso() }}</p-message> }
+<p-table #listado [value]="centros()" [globalFilterFields]="['codigo', 'nombre', 'codigoDeis']" [loading]="cargando()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [showCurrentPageReport]="true" currentPageReportTemplate="{first}–{last} de {totalRecords}" [scrollable]="true" [tableStyle]="{ 'min-width': '55rem' }" size="small">
+  <ng-template #header><tr><th>Código</th><th>Centro</th><th>DEIS</th><th>Comuna</th><th>Estado</th><th>Sectores</th><th>Acciones</th></tr></ng-template>
+  <ng-template #body let-centro>
+    <tr>
+      <td>{{ centro.codigo }}</td><td>{{ centro.nombre }}</td><td>{{ centro.codigoDeis || 'No informado' }}</td>
+      <td>{{ nombreComuna(centro.comunaCodigo) }}</td><td>{{ centro.activo ? 'Activo' : 'Inactivo' }}</td><td>{{ centro.utilizaSectores ? 'Sí' : 'No' }}</td>
+      <td class="acciones">
+        <p-button icon="pi pi-pencil" [text]="true" [disabled]="guardando()" [ariaLabel]="'Editar ' + centro.nombre" pTooltip="Editar centro" tooltipEvent="both" (onClick)="editar(centro)" />
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template #emptymessage><tr><td colspan="7">No hay centros que mostrar. Usa Nuevo centro o revisa la búsqueda.</td></tr></ng-template>
+</p-table>
+
+<p-dialog [header]="editando() ? 'Modificar centro' : 'Nuevo centro'" [visible]="editorVisible()" (visibleChange)="cerrarEditor()" [modal]="true" [draggable]="false" [closable]="!guardando()" [closeOnEscape]="!guardando()" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+  <form [formGroup]="formulario" (ngSubmit)="guardar()">
+    <p-toolbar aria-label="Acciones del formulario de centro">
+      <ng-template #start><p-button type="submit" [label]="editando() ? 'Modificar' : 'Guardar'" [icon]="editando() ? 'pi pi-pencil' : 'pi pi-save'" [loading]="guardando()" [disabled]="formulario.invalid || guardando()" /></ng-template>
+      <ng-template #end><p-button type="button" label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" [disabled]="guardando()" (onClick)="cerrarEditor()" /></ng-template>
+    </p-toolbar>
+    @if (errorEditor()) { <p-message severity="error" role="alert">{{ errorEditor() }}</p-message> }
+    <div class="campos">
+      <div class="campo"><label for="codigo-centro">Código interno *</label><p-inputgroup><input id="codigo-centro" pInputText formControlName="codigo" maxlength="40"><p-inputgroup-addon><i class="pi pi-key" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+      <div class="campo"><label for="nombre-centro">Nombre / descripción *</label><p-inputgroup><input id="nombre-centro" pInputText formControlName="nombre" maxlength="160"><p-inputgroup-addon><i class="pi pi-building" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+      <div class="campo"><label for="deis-centro">Código DEIS</label><p-inputgroup><input id="deis-centro" pInputText formControlName="codigoDeis" maxlength="20"><p-inputgroup-addon pTooltip="Opcional. Código oficial del establecimiento, separado de su ID y código interno." tooltipEvent="both" tabindex="0"><i class="pi pi-id-card" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+      <div class="campo"><label for="comuna-centro">Comuna</label><p-inputgroup><p-select inputId="comuna-centro" formControlName="comunaCodigo" [options]="comunas" optionLabel="nombre" optionValue="codigo" [filter]="true" filterBy="nombre,codigo" appendTo="body" /><p-inputgroup-addon><i class="pi pi-map-marker" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+      <div class="campo direccion"><label for="direccion-centro">Dirección *</label><p-inputgroup><input id="direccion-centro" pInputText formControlName="direccion" maxlength="300"><p-inputgroup-addon><i class="pi pi-map" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+      <div class="opcion"><p-toggleswitch inputId="activo-centro" formControlName="activo" /><label for="activo-centro">Activo</label></div>
+      <div class="opcion"><p-toggleswitch inputId="sectores-centro" formControlName="utilizaSectores" /><label for="sectores-centro">Utiliza sectores</label></div>
+      @for (coleccion of contactos; track coleccion.nombre) {
+        <div class="campo">
+          <label [for]="'principal-centro-' + coleccion.nombre">{{ coleccion.titulo }} · Principal</label>
+          <p-inputgroup>
+            <input [id]="'principal-centro-' + coleccion.nombre" pInputText readonly [value]="resumenContacto()[coleccion.nombre]" placeholder="Sin información">
+            <p-inputgroup-addon><p-button type="button" [icon]="coleccion.icono" [text]="true" [disabled]="guardando()" [ariaLabel]="'Gestionar ' + coleccion.titulo" [pTooltip]="'Gestionar ' + coleccion.titulo" tooltipEvent="both" (onClick)="contactoVisible.set(coleccion.nombre)" /></p-inputgroup-addon>
+          </p-inputgroup>
+          @if (formulario.controls[coleccion.nombre].invalid) { <small class="error" role="alert">Hay contactos inválidos. Revísalos en el modal.</small> }
+        </div>
+      }
+      @if (utilizaSectores() || cantidadSectores() > 0) {
+        <div class="campo direccion">
+          <label for="sectores-resumen">Sectores del centro</label>
+          <p-inputgroup>
+            <input id="sectores-resumen" pInputText readonly [value]="cantidadSectores() + ' sector(es)'" placeholder="Sin sectores">
+            <p-inputgroup-addon><p-button type="button" icon="pi pi-sitemap" [text]="true" [disabled]="guardando()" ariaLabel="Gestionar sectores" pTooltip="Gestionar sectores del centro" tooltipEvent="both" (onClick)="sectorVisible.set(true)" /></p-inputgroup-addon>
+          </p-inputgroup>
+          @if (formulario.controls.sectores.invalid) { <small class="error" role="alert">Hay sectores incompletos. Revisa nombre y color en el modal.</small> }
+        </div>
+      }
+    </div>
+  </form>
+</p-dialog>
+
+@for (coleccion of contactos; track coleccion.nombre) {
+  <p-dialog [header]="coleccion.titulo" [visible]="editorVisible() && contactoVisible() === coleccion.nombre" (visibleChange)="contactoVisible.set(null)" [modal]="true" [draggable]="false" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+    <p-toolbar [ariaLabel]="'Acciones de ' + coleccion.titulo">
+      <ng-template #start><p-button type="button" [label]="'Agregar ' + coleccion.singular" icon="pi pi-plus" [disabled]="formulario.controls[coleccion.nombre].length >= 20" (onClick)="agregarContacto(coleccion.nombre)" /></ng-template>
+      <ng-template #end><p-button type="button" label="Cerrar" icon="pi pi-times" severity="secondary" [outlined]="true" pTooltip="Los cambios se aplican al formulario del centro; se guardan desde su toolbar." tooltipEvent="both" (onClick)="contactoVisible.set(null)" /></ng-template>
+    </p-toolbar>
+    <p-table class="tabla-modal tabla-contactos" [value]="formulario.controls[coleccion.nombre].controls" [scrollable]="true" [tableStyle]="{ 'min-width': '36rem', 'table-layout': 'fixed' }" size="small">
+      <ng-template #header><tr><th>Principal</th><th>{{ coleccion.titulo }}</th><th>Tipo / uso</th><th>Acciones</th></tr></ng-template>
+      <ng-template #body let-contacto let-i="rowIndex">
+        <tr [formGroup]="contacto" [class.fila-principal]="contacto.controls.principal.value">
+          <td><p-toggleswitch [formControl]="contacto.controls.principal" (onChange)="marcarPrincipal(coleccion.nombre, i)" [ariaLabel]="'Marcar ' + coleccion.singular + ' ' + (i + 1) + ' como principal'" pTooltip="Selecciona otro registro para cambiar el principal." tooltipEvent="both" /></td>
+          <td><p-inputgroup><input pInputText [type]="coleccion.tipo" formControlName="valor" [attr.aria-label]="coleccion.singular + ' ' + (i + 1)" [attr.aria-invalid]="contacto.controls.valor.touched && contacto.controls.valor.invalid"><p-inputgroup-addon [pTooltip]="coleccion.nombre === 'telefonos' ? 'Incluye + y código de país; entre 7 y 15 dígitos.' : 'Formato de correo; no verifica existencia ni titularidad.'" tooltipEvent="both" tabindex="0"><i [class]="coleccion.icono" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup>
+            @if (contacto.controls.valor.touched && contacto.controls.valor.invalid) { <small class="error" role="alert">{{ coleccion.nombre === 'telefonos' ? 'Ingresa un teléfono válido con código de país.' : 'Ingresa un correo válido.' }}</small> }
+          </td>
+          <td><p-inputgroup><p-select formControlName="uso" [options]="usosContacto" optionLabel="nombre" optionValue="codigo" [ariaLabel]="'Tipo / uso de ' + coleccion.singular + ' ' + (i + 1)" appendTo="body" /><p-inputgroup-addon><i class="pi pi-tag" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></td>
+          <td><p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" [ariaLabel]="'Quitar ' + coleccion.singular + ' ' + (i + 1)" pTooltip="Quitar registro" tooltipEvent="both" (onClick)="quitarContacto(coleccion.nombre, i)" /></td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage><tr><td colspan="4">No hay registros. Usa Agregar.</td></tr></ng-template>
+    </p-table>
+  </p-dialog>
+}
+
+<p-dialog header="Sectores del centro" [visible]="editorVisible() && sectorVisible()" (visibleChange)="sectorVisible.set(false)" [modal]="true" [draggable]="false" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+    <p-toolbar aria-label="Acciones de sectores del centro">
+      <ng-template #start><p-button type="button" label="Agregar sector" icon="pi pi-plus" [disabled]="!formulario.controls.activo.value || !utilizaSectores()" (onClick)="agregarSector()" /></ng-template>
+      <ng-template #end><p-button type="button" label="Cerrar" icon="pi pi-times" severity="secondary" [outlined]="true" (onClick)="sectorVisible.set(false)" /></ng-template>
+    </p-toolbar>
+    <p class="ayuda">Los sectores se guardan junto con el centro. Cerrar vuelve al formulario sin enviar cambios. Los sectores existentes se desactivan, no se eliminan.</p>
+    @if (!utilizaSectores() || !formulario.controls.activo.value) { <p-message severity="warn">Activa el centro y Utiliza sectores para agregar o guardar sectores nuevos. Los existentes se conservan.</p-message> }
+    <p-table class="tabla-sectores" [value]="formulario.controls.sectores.controls" [paginator]="true" [rows]="10" [scrollable]="true" [tableStyle]="{ 'min-width': '36rem' }" size="small">
+      <ng-template #header><tr><th>Nombre *</th><th>Color *</th><th>Activo</th><th>Acciones</th></tr></ng-template>
+      <ng-template #body let-sector let-i="rowIndex">
+        <tr [formGroup]="sector">
+          <td><input pInputText formControlName="nombre" maxlength="120" [attr.aria-label]="'Nombre de sector ' + (i + 1)">
+            @if (sector.controls.nombre.touched && sector.controls.nombre.invalid) { <small class="error" role="alert">Indica el nombre del sector.</small> }
+          </td>
+          <td><label class="solo-lectores" [for]="'selector-color-sector-' + i">Color de sector {{ i + 1 }}</label><p-colorpicker formControlName="color" format="hex" [inputId]="'selector-color-sector-' + i" appendTo="body" />
+            @if (sector.controls.color.touched && sector.controls.color.invalid) { <small class="error" role="alert">Selecciona un color.</small> }
+          </td>
+          <td><p-toggleswitch formControlName="activo" [ariaLabel]="'Sector ' + (i + 1) + ' activo'" /></td>
+          <td><p-button type="button" [icon]="sector.controls.id.value === null ? 'pi pi-trash' : 'pi pi-ban'" severity="danger" [text]="true" [disabled]="sector.controls.id.value !== null && !sector.controls.activo.value" [ariaLabel]="(sector.controls.id.value === null ? 'Quitar sector ' : 'Desactivar sector ') + (i + 1)" [pTooltip]="sector.controls.id.value === null ? 'Quitar fila sin guardar' : 'Desactivar sin borrar referencias'" tooltipEvent="both" (onClick)="quitarSector(i)" /></td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage><tr><td colspan="4">No hay sectores registrados.</td></tr></ng-template>
+    </p-table>
+</p-dialog>

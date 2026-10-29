@@ -1,0 +1,18 @@
+.bienvenida { background: linear-gradient(110deg, #173e48, #206d67); border-radius: 1rem; padding: 2rem 2.5rem; display: flex; justify-content: space-between; gap: 1rem; color: white; overflow: hidden; position: relative; }
+.insignia { color: #9cdecd; font-size: .58rem; font-weight: 700; letter-spacing: .15em; }
+.bienvenida h2 { font-size: 1.9rem; line-height: 1.3; font-weight: 500; letter-spacing: -.025em; margin: 1rem 0; }
+.bienvenida p { color: #b7d4d5; font-size: .8rem; line-height: 1.8; max-width: 30rem; }
+.simbolo { font-size: 15rem; line-height: 1; color: #ffffff10; font-weight: 600; align-self: center; margin: -2rem 1rem -2rem 0; }
+.seccion { display: flex; justify-content: space-between; align-items: center; margin: 2.3rem 0 1rem; gap: 1rem; }
+.seccion h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+.seccion span { font-size: .68rem; color: #84969e; }
+.areas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; }
+.areas p-card { display: grid; }
+.icono-area { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; background: #eaf5f1; border-radius: .65rem; color: #288b78; font-size: .8rem; font-weight: 700; }
+h3 { font-size: 1rem; margin: 1.1rem 0 .6rem; color: #294754; }
+.areas p { font-size: .78rem; line-height: 1.9; color: #7b8e99; min-height: 4.5rem; }
+.pendiente { display: inline-block; font-size: .6rem; border: 1px solid #e6ecef; background: #f7f9fa; color: #8999a3; border-radius: 1rem; padding: .3rem .6rem; }
+.nota { display: flex; align-items: center; gap: .8rem; border: 1px solid #dee9e9; border-radius: .7rem; margin-top: 1.5rem; padding: .8rem 1.1rem; background: #edf5f4; color: #6f888e; font-size: .71rem; line-height: 1.8; }
+.nota strong { color: #436e71; font-weight: 600; }
+@media (max-width: 1100px) { .simbolo { display: none; } }
+@media (max-width: 950px) { .areas { grid-template-columns: 1fr; } .areas p { min-height: 0; } .bienvenida { padding: 1.5rem; } .bienvenida h2 { font-size: 1.5rem; } }

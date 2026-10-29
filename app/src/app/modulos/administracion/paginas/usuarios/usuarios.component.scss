@@ -1,0 +1,11 @@
+.paneles { margin-top: 1.5rem; }
+p-toolbar { display: block; margin-bottom: 1rem; }
+h2 { font-size: 1rem; margin: 0 0 .75rem; color: #284652; }
+.titulo-panel { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1rem; }
+.titulo-panel p, .ayuda { color: #7d8f99; font-size: .75rem; line-height: 1.8; margin: 0 0 1rem; }
+form { display: grid; gap: 1.2rem; }
+small { color: #84949c; line-height: 1.6; font-size: .68rem; }
+.estado { display: flex; align-items: center; gap: .5rem; font-size: .8rem; }
+.acciones { display: flex; flex-wrap: wrap; gap: .75rem; }
+.solo-lectores { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 1150px) { .paneles { grid-template-columns: 1fr; } }

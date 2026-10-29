@@ -1,0 +1,264 @@
+<div class="cabecera-pagina">
+  <span class="sobretitulo">ADMISIÓN / INGRESOS</span>
+  <h1>Registro unificado</h1>
+  <p>Un solo ingreso para registrar a la persona y crear su identidad de paciente.</p>
+</div>
+<p-toolbar aria-label="Acciones del formulario de ingreso">
+  <ng-template #start>
+    <div class="acciones-formulario">
+      <span pTooltip="Guardado pendiente: el formulario aún no tiene persistencia." tooltipEvent="both" tabindex="0"><p-button type="button" label="Guardar" icon="pi pi-save" [disabled]="true" /></span>
+      <span pTooltip="Modificación pendiente: aún no se cargan ni persisten registros." tooltipEvent="both" tabindex="0"><p-button type="button" label="Modificar" icon="pi pi-pencil" severity="secondary" [outlined]="true" [disabled]="true" /></span>
+    </div>
+  </ng-template>
+  <ng-template #end>
+    <p-button type="button" label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" routerLink="/admision" />
+  </ng-template>
+</p-toolbar>
+<small class="aviso-desarrollo">Diseño en desarrollo: no ingresar datos reales. La información no se envía ni se guarda.</small>
+<form [formGroup]="formulario" (submit)="$event.preventDefault()" autocomplete="off">
+  <p-tabs value="personales">
+    <p-tablist>
+      <p-tab value="personales">1. Datos Personales</p-tab>
+      <p-tab value="ficha">2. Ficha Clínica</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="personales">
+        <div class="secciones">
+          <p-fieldset legend="1. Identificación">
+            <div class="opcion"><p-checkbox inputId="identidadProvisional" formControlName="provisional" [binary]="true" (onChange)="cambiarEstadoIdentidad()" /><label for="identidadProvisional">Identidad provisional o desconocida (urgencia)</label></div>
+            @if (provisional()) { <p-message severity="info">No se exige nombre ni documento confirmado. No inventes datos; el identificador temporal se generará al habilitar el guardado.</p-message> }
+            <div class="fila-identidad">
+            <div class="campo identificacion-resumen">
+              <label for="identificacionPrincipal">{{ rutIngresado() !== null ? 'RUT/RUN chileno' : tipoIdentificacionPrincipal() }} · Principal</label>
+              <p-inputgroup>
+                <input #entradaRut id="identificacionPrincipal" pInputText [value]="rutIngresado() ?? identificacionPrincipal()" (input)="rutIngresado.set(entradaRut.value); errorRut.set('')" (keydown.enter)="registrarRut($event)" (blur)="formatearEntradaRut()" placeholder="Escribe el RUT y presiona Enter" [attr.aria-invalid]="!!errorRut() || identificacionesInvalidas()" [attr.aria-describedby]="errorRut() ? 'error-rut' : null">
+                <p-inputgroup-addon>
+                  <p-button pTooltip="Escribe un RUT y presiona Enter para registrarlo como principal. El icono permite gestionar los demás documentos." tooltipEvent="both" tooltipPosition="top" type="button" ariaLabel="Gestionar identificaciones" title="Gestionar identificaciones" [text]="true" (onClick)="identificacionesVisibles.set(true)">
+                    <ng-template #icon><i class="pi pi-id-card" aria-hidden="true"></i></ng-template>
+                  </p-button>
+                </p-inputgroup-addon>
+              </p-inputgroup>
+
+              @if (errorRut()) { <small id="error-rut" class="error" role="alert">{{ errorRut() }}</small> }
+              @if (identificacionesInvalidas()) { <small class="error" role="alert">Hay identificaciones incompletas o inválidas. Revísalas en el modal.</small> }
+            </div>
+              <div class="campo"><label for="nombres">Nombres {{ provisional() ? '(si se conocen)' : '*' }}</label><p-inputgroup><input id="nombres" pInputText formControlName="nombres" [attr.aria-required]="!provisional()" [attr.aria-invalid]="formulario.controls.nombres.touched && formulario.controls.nombres.invalid"><p-inputgroup-addon><i class="pi pi-user" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup>
+                @if (formulario.controls.nombres.touched && formulario.controls.nombres.invalid) { <small class="error" role="alert">Ingresa al menos un nombre para una identidad conocida.</small> }
+              </div>
+              <div class="campo"><label for="apellidos">Apellidos</label><p-inputgroup><input id="apellidos" pInputText formControlName="apellidos"><p-inputgroup-addon pTooltip="Admite un solo apellido o ninguno si la persona tiene un nombre único." tooltipEvent="both" tooltipPosition="top" tabindex="0" role="note" aria-label="Ayuda del campo"><i class="pi pi-users" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+              <div class="campo"><label for="nombreSocial">Nombre Social</label><p-inputgroup><input id="nombreSocial" pInputText formControlName="nombreSocial"><p-inputgroup-addon><i class="pi pi-face-smile" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+            </div>
+          </p-fieldset>
+          <p-dialog header="Identificaciones" [visible]="identificacionesVisibles()" (visibleChange)="identificacionesVisibles.set($event)" [modal]="true" [draggable]="false" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+            <p class="ayuda">Agrega los documentos y selecciona el principal. El RUT se valida por dígito verificador; aún no se consultan duplicados.</p>
+            <p-toolbar aria-label="Acciones de identificaciones">
+              <ng-template #start><p-button type="button" icon="pi pi-plus" label="Agregar identificación" (onClick)="agregarIdentificacion()" /></ng-template>
+              <ng-template #end><p-button type="button" icon="pi pi-times" label="Cerrar" severity="secondary" [outlined]="true" (onClick)="identificacionesVisibles.set(false)" /></ng-template>
+            </p-toolbar>
+            <p-table class="tabla-modal tabla-identificaciones" [value]="formulario.controls.identificaciones.controls" [scrollable]="true" [tableStyle]="{ 'min-width': '40rem', 'table-layout': 'fixed' }" size="small">
+              <ng-template #header>
+                <tr><th scope="col">Principal</th><th scope="col">Tipo de documento</th><th scope="col">Número / valor</th><th scope="col">Acciones</th></tr>
+              </ng-template>
+              <ng-template #body let-identificacion let-i="rowIndex">
+                <tr [formGroup]="identificacion" [class.fila-principal]="identificacion.controls.principal.value">
+                  <td>
+                    <p-toggleswitch [formControl]="identificacion.controls.principal" (onChange)="marcarPrincipal('identificaciones', i)" [ariaLabel]="'Marcar documento ' + (i + 1) + ' como principal'" pTooltip="Selecciona otro registro para cambiar el principal." tooltipEvent="both" />
+                  </td>
+                  <td><p-inputgroup><p-select [inputId]="'tipo-' + i" [ariaLabel]="'Tipo del documento ' + (i + 1)" formControlName="tipo" [options]="tiposIdentificacion" placeholder="Selecciona un tipo" appendTo="body" /><p-inputgroup-addon><i class="pi pi-id-card" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></td>
+                  <td>
+                    <p-inputgroup><input [id]="'documento-' + i" [attr.aria-label]="'Número del documento ' + (i + 1)" pInputText formControlName="valor" (blur)="formatearDocumento(i)" [placeholder]="identificacion.controls.tipo.value === 'RUT/RUN chileno' ? 'RUT con dígito verificador' : 'Identificación'" [attr.aria-invalid]="identificacion.touched && identificacion.invalid" [attr.aria-describedby]="'error-documento-' + i"><p-inputgroup-addon><i class="pi pi-hashtag" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup>
+                  @if (identificacion.touched && identificacion.invalid) {
+                    <small class="error" role="alert" [id]="'error-documento-' + i">{{ identificacion.hasError('rutInvalido') ? 'RUT chileno inválido: revisa el formato y el dígito verificador.' : 'Selecciona el tipo y completa el documento, o quita el registro.' }}</small>
+                  }
+                  </td>
+                  <td><p-button type="button" icon="pi pi-trash" pTooltip="Quitar documento" tooltipEvent="both" size="small" severity="danger" [text]="true" [ariaLabel]="'Quitar documento ' + (i + 1)" (onClick)="quitarRegistro('identificaciones', i)" /></td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage><tr><td colspan="4">No hay identificaciones registradas. Usa Agregar identificación.</td></tr></ng-template>
+            </p-table>
+          </p-dialog>
+          <p-fieldset legend="2. Datos demográficos">
+
+            <div class="campos campos-demograficos">
+              <div class="campo"><label for="fechaNacimiento">Fecha de nacimiento</label><p-inputgroup><p-datepicker inputId="fechaNacimiento" formControlName="fechaNacimiento" dateFormat="dd/mm/yy" placeholder="dd/mm/aaaa" [showClear]="true" [fluid]="true" [style]="{ width: '100%' }" [inputStyle]="{ width: '100%', minWidth: '0' }" appendTo="body" /><p-inputgroup-addon pTooltip="Opcional. No completar día o mes desconocidos." tooltipEvent="both" tooltipPosition="top" tabindex="0" role="note" aria-label="Ayuda del campo"><i class="pi pi-calendar" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+              <div class="campo"><label for="sexo">Sexo biológico</label><p-inputgroup><p-select inputId="sexo" formControlName="sexoBiologico" [options]="catalogos.sexoBiologico.opciones" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="Selecciona una opción" /><p-inputgroup-addon><i class="pi pi-user" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+              <div class="campo"><label for="genero">Identidad de género</label><p-inputgroup><p-select inputId="genero" formControlName="identidadGenero" [options]="catalogos.identidadGenero.opciones" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="Selecciona una opción" /><p-inputgroup-addon><i class="pi pi-user" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+              <div class="campo"><label for="etnia">Etnia / pueblo originario</label><p-inputgroup><p-select inputId="etnia" formControlName="etnia" [options]="catalogos.etnia.opciones" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="Selecciona una opción" /><p-inputgroup-addon pTooltip="Declaración opcional. Catálogo MINSAL EIS; no inferir por nacionalidad o lugar de nacimiento." tooltipEvent="both" tooltipPosition="top" tabindex="0" role="note" aria-label="Ayuda del campo"><i class="pi pi-users" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+              <div class="campo"><label for="paisNacimiento">País de nacimiento</label><p-inputgroup><p-select inputId="paisNacimiento" formControlName="paisNacimiento" [options]="catalogos.paises.opciones" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="Selecciona una opción" /><p-inputgroup-addon><i class="pi pi-globe" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+              <div class="campo"><label for="estadoCivil">Estado civil</label><p-inputgroup><p-select inputId="estadoCivil" formControlName="estadoCivil" [options]="catalogos.estadoCivil.opciones" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="Selecciona una opción" /><p-inputgroup-addon><i class="pi pi-heart" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+              <div class="campo"><label for="fechaDefuncion">Fecha de defunción (si corresponde)</label><p-inputgroup><p-datepicker inputId="fechaDefuncion" formControlName="fechaDefuncion" dateFormat="dd/mm/yy" placeholder="dd/mm/aaaa" [showClear]="true" [fluid]="true" [style]="{ width: '100%' }" [inputStyle]="{ width: '100%', minWidth: '0' }" appendTo="body" /><p-inputgroup-addon pTooltip="No elimina la identidad ni los registros relacionados." tooltipEvent="both" tooltipPosition="top" tabindex="0" role="note" aria-label="Ayuda del campo"><i class="pi pi-calendar" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+              @for (catalogo of catalogosMultiples; track catalogo.nombre) {
+                <div class="campo">
+                  <label [for]="'resumen-' + catalogo.nombre">{{ catalogo.titulo }} · Principal</label>
+                  <p-inputgroup>
+                    <input [id]="'resumen-' + catalogo.nombre" pInputText readonly [value]="resumenCatalogos()[catalogo.nombre]" placeholder="Sin registros seleccionados">
+                    <p-inputgroup-addon><p-button type="button" [icon]="catalogo.icono" [text]="true" [ariaLabel]="'Gestionar ' + catalogo.titulo" [pTooltip]="'Gestionar ' + catalogo.titulo" tooltipEvent="both" (onClick)="catalogoVisible.set(catalogo.nombre)" /></p-inputgroup-addon>
+                  </p-inputgroup>
+                </div>
+              }
+              <div class="campo">
+                <label for="principal-direcciones">Direcciones · Principal</label>
+                <p-inputgroup>
+                  <input id="principal-direcciones" pInputText readonly [value]="resumenContacto().direcciones" placeholder="Sin información">
+                  <p-inputgroup-addon><p-button type="button" icon="pi pi-map-marker" [text]="true" ariaLabel="Gestionar Direcciones" pTooltip="Gestionar direcciones y elegir la principal" tooltipEvent="both" (onClick)="contactoVisible.set('direcciones')" /></p-inputgroup-addon>
+                </p-inputgroup>
+              </div>
+            </div>
+          </p-fieldset>
+          @for (catalogo of catalogosMultiples; track catalogo.nombre) {
+            <p-dialog [header]="catalogo.titulo" [visible]="catalogoVisible() === catalogo.nombre" (visibleChange)="catalogoVisible.set($event ? catalogo.nombre : null)" [modal]="true" [draggable]="false" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+
+              <p-toolbar [ariaLabel]="'Acciones de ' + catalogo.titulo">
+                <ng-template #start><p-button type="button" icon="pi pi-plus" [label]="'Agregar ' + catalogo.singular.toLowerCase()" (onClick)="agregarCatalogo(catalogo.nombre)" /></ng-template>
+                <ng-template #end><p-button type="button" icon="pi pi-times" label="Cerrar" severity="secondary" [outlined]="true" (onClick)="catalogoVisible.set(null)" /></ng-template>
+              </p-toolbar>
+              <p-table class="tabla-modal" [value]="formulario.controls[catalogo.nombre].controls" [scrollable]="true" [tableStyle]="{ 'min-width': '24rem', 'table-layout': 'fixed' }" size="small">
+                <ng-template #header><tr><th scope="col">Principal</th><th scope="col">{{ catalogo.singular }}</th><th scope="col">Acciones</th></tr></ng-template>
+                <ng-template #body let-registro let-i="rowIndex">
+                  <tr [class.fila-principal]="registro.controls.principal.value">
+                    <td><p-toggleswitch [formControl]="registro.controls.principal" (onChange)="marcarPrincipal(catalogo.nombre, i)" [ariaLabel]="'Marcar ' + catalogo.singular + ' ' + (i + 1) + ' como principal'" pTooltip="Selecciona otro registro para cambiar el principal." tooltipEvent="both" /></td>
+                    <td><p-inputgroup><p-select [inputId]="catalogo.nombre + '-' + i" [ariaLabel]="catalogo.singular + ' ' + (i + 1)" [formControl]="registro.controls.id" [options]="catalogo.nombre === 'nacionalidades' ? catalogos.paises.opciones : opcionesIdiomas" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" placeholder="Selecciona una opción" appendTo="body" /><p-inputgroup-addon><i [class]="catalogo.icono" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></td>
+                    <td><p-button type="button" icon="pi pi-trash" pTooltip="Quitar registro" tooltipEvent="both" size="small" severity="danger" [text]="true" [ariaLabel]="'Quitar ' + catalogo.singular + ' ' + (i + 1)" (onClick)="quitarRegistro(catalogo.nombre, i)" /></td>
+                  </tr>
+                </ng-template>
+                <ng-template #emptymessage><tr><td colspan="3">No hay registros. Usa Agregar para incorporar una fila.</td></tr></ng-template>
+              </p-table>
+            </p-dialog>
+          }
+          <p-fieldset legend="3. Contactibilidad">
+            <div class="campos campos-contactibilidad">
+              @for (medio of mediosContacto; track medio.nombre) {
+                <div class="campo">
+                  <label [for]="'principal-' + medio.nombre">{{ medio.titulo }} · Principal</label>
+                  <p-inputgroup>
+                    <input [id]="'principal-' + medio.nombre" pInputText readonly [value]="resumenContacto()[medio.nombre]" placeholder="Sin información">
+                    <p-inputgroup-addon><p-button type="button" [icon]="medio.icono" [text]="true" [ariaLabel]="'Gestionar ' + medio.titulo" [pTooltip]="'Gestionar ' + medio.titulo + ': agregar, editar y elegir el principal'" tooltipEvent="both" (onClick)="contactoVisible.set(medio.nombre)" /></p-inputgroup-addon>
+                  </p-inputgroup>
+                  @if (formulario.controls[medio.nombre].invalid) { <small class="error" role="alert">Hay registros inválidos. Revísalos en el modal.</small> }
+                </div>
+              }
+            </div>
+          </p-fieldset>
+        </div>
+      </p-tabpanel>
+      <p-tabpanel value="ficha">
+        <p-fieldset legend="Datos del Paciente">
+          <div class="campos campos-contactibilidad">
+            <div class="campo">
+              <label for="numeroFicha">Número de ficha</label>
+              <p-inputgroup>
+                <input id="numeroFicha" pInputText readonly placeholder="Se asignará al guardar">
+                <p-inputgroup-addon pTooltip="Solo lectura. Se asigna al crear Paciente: su ID si Utiliza ficha propia está desactivado; MAX(numeroFicha) + 1 si está activado." tooltipEvent="both" tabindex="0" role="note" aria-label="Asignación automática del número de ficha"><i class="pi pi-folder" aria-hidden="true"></i></p-inputgroup-addon>
+              </p-inputgroup>
+            </div>
+            <div class="campo">
+              <label for="centroSalud">Centro de Salud</label>
+              <p-inputgroup>
+                <p-select inputId="centroSalud" formControlName="centroSalud" [options]="opcionesCentros()" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre" [loading]="cargandoCentros()" appendTo="body" placeholder="No informado" (onChange)="cambiarCentro()" />
+                <p-inputgroup-addon pTooltip="Selecciona un único centro activo del catálogo de Administración. No se asigna a partir del domicilio." tooltipEvent="both" tabindex="0" role="note" aria-label="Ayuda del centro de salud"><i class="pi pi-building" aria-hidden="true"></i></p-inputgroup-addon>
+              </p-inputgroup>
+            </div>
+            @if (centroSeleccionado()?.utilizaSectores) {
+            <div class="campo">
+              <label for="sector">Sector</label>
+              <p-inputgroup>
+                <p-select inputId="sector" formControlName="sector" [options]="opcionesSectores()" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre" appendTo="body" placeholder="No informado" />
+                <p-inputgroup-addon pTooltip="Opcional. Solo sectores activos del centro seleccionado. Al cambiar de centro se limpia el sector." tooltipEvent="both" tabindex="0" role="note" aria-label="Ayuda del sector"><i class="pi pi-sitemap" aria-hidden="true"></i></p-inputgroup-addon>
+              </p-inputgroup>
+            </div>
+            }
+          </div>
+          @if (errorCentros()) { <p-message severity="error" role="alert">{{ errorCentros() }}</p-message> }
+          <p-button type="button" label="Actualizar centros" icon="pi pi-refresh" [text]="true" [loading]="cargandoCentros()" (onClick)="cargarCentros()" />
+          @if (!cargandoCentros() && !errorCentros() && opcionesCentros().length === 1) { <p-message severity="info">No hay centros activos. Regístralos en Administración → Centros de Salud.</p-message> }
+          <p-message severity="info">La selección es visual: el ingreso de Persona y Paciente todavía no se guarda. Aquí no se registran atenciones ni diagnósticos.</p-message>
+        </p-fieldset>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+          <p-dialog header="Contactos" [visible]="contactoVisible() === 'contactosEmergencia'" (visibleChange)="contactoVisible.set($event ? 'contactosEmergencia' : null)" [modal]="true" [draggable]="false" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+            <p class="ayuda">Los medios del contacto son propios y no se asignan a la persona atendida. Parentesco o contacto de emergencia no implica tutoría ni autorización de acceso clínico.</p>
+            <p-toolbar aria-label="Acciones de contactos">
+              <ng-template #start><p-button type="button" icon="pi pi-plus" label="Agregar contacto" (onClick)="agregarContactoEmergencia()" /></ng-template>
+              <ng-template #end><p-button type="button" icon="pi pi-times" label="Cerrar" severity="secondary" [outlined]="true" (onClick)="contactoVisible.set(null)" /></ng-template>
+            </p-toolbar>
+            <p-table class="tabla-modal" [value]="formulario.controls.contactosEmergencia.controls" [scrollable]="true" [tableStyle]="{ 'min-width': '40rem', 'table-layout': 'fixed' }" size="small">
+              <ng-template #header><tr><th>Principal</th><th>Contacto</th><th>Acciones</th></tr></ng-template>
+              <ng-template #body let-contacto let-i="rowIndex">
+                <tr [formGroup]="contacto" [class.fila-principal]="contacto.controls.principal.value">
+                  <td><p-toggleswitch [formControl]="contacto.controls.principal" (onChange)="marcarPrincipal('contactosEmergencia', i)" [ariaLabel]="'Marcar contacto ' + (i + 1) + ' como principal'" pTooltip="Selecciona otro registro para cambiar el principal." tooltipEvent="both" /></td>
+                  <td>
+                  <div class="campos">
+                    <div class="campo"><label [for]="'emergencia-nombre-' + i">Nombre del contacto</label><p-inputgroup><input [id]="'emergencia-nombre-' + i" pInputText formControlName="nombre"><p-inputgroup-addon><i class="pi pi-user" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'emergencia-relacion-' + i">Relación</label><p-inputgroup><p-select [inputId]="'emergencia-relacion-' + i" formControlName="relacion" [options]="[]" placeholder="Catálogo por definir" /><p-inputgroup-addon><i class="pi pi-sitemap" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'emergencia-telefono-' + i">Teléfono con código de país</label><p-inputgroup><input [id]="'emergencia-telefono-' + i" pInputText type="tel" formControlName="telefono"><p-inputgroup-addon><i class="pi pi-phone" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup>
+                      @if (contacto.controls.telefono.touched && contacto.controls.telefono.invalid) { <small class="error" role="alert">Revisa el teléfono: incluye + y código de país, entre 7 y 15 dígitos.</small> }
+                    </div>
+                    <div class="campo"><label [for]="'emergencia-correo-' + i">Correo electrónico</label><p-inputgroup><input [id]="'emergencia-correo-' + i" pInputText type="email" formControlName="correo"><p-inputgroup-addon><i class="pi pi-envelope" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup>
+                      @if (contacto.controls.correo.touched && contacto.controls.correo.invalid) { <small class="error" role="alert">Ingresa una dirección de correo válida.</small> }
+                    </div>
+                  </div>
+                  </td>
+                  <td><p-button type="button" icon="pi pi-trash" size="small" severity="danger" [text]="true" [ariaLabel]="'Quitar contacto ' + (i + 1)" pTooltip="Quitar contacto" tooltipEvent="both" (onClick)="quitarRegistro('contactosEmergencia', i)" /></td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage><tr><td colspan="3">No hay contactos. Usa Agregar contacto.</td></tr></ng-template>
+            </p-table>
+          </p-dialog>
+          @for (coleccion of coleccionesContacto; track coleccion.nombre) {
+            <p-dialog [header]="coleccion.titulo" [visible]="contactoVisible() === coleccion.nombre" (visibleChange)="contactoVisible.set($event ? coleccion.nombre : null)" [modal]="true" [draggable]="false" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+              <p-toolbar [ariaLabel]="'Acciones de ' + coleccion.titulo">
+                <ng-template #start><p-button type="button" icon="pi pi-plus" [label]="'Agregar ' + coleccion.singular" (onClick)="agregarContacto(coleccion.nombre)" /></ng-template>
+                <ng-template #end><p-button type="button" icon="pi pi-times" label="Cerrar" severity="secondary" [outlined]="true" (onClick)="contactoVisible.set(null)" /></ng-template>
+              </p-toolbar>
+              <p-table class="tabla-modal tabla-contactos" [value]="coleccion.controles.controls" [scrollable]="true" [tableStyle]="{ 'min-width': '40rem', 'table-layout': 'fixed' }" size="small">
+                <ng-template #header><tr><th>Principal</th><th>{{ coleccion.titulo }}</th><th>Tipo / uso</th><th>Acciones</th></tr></ng-template>
+                <ng-template #body let-contacto let-i="rowIndex">
+                  <tr [formGroup]="contacto" [class.fila-principal]="contacto.controls.principal.value">
+                    <td><p-toggleswitch [formControl]="contacto.controls.principal" (onChange)="marcarPrincipal(coleccion.nombre, i)" [ariaLabel]="'Marcar ' + coleccion.singular + ' ' + (i + 1) + ' como principal'" pTooltip="Selecciona otro registro para cambiar el principal." tooltipEvent="both" /></td>
+                    <td>
+                      <div class="campo"><p-inputgroup><input [id]="coleccion.nombre + '-' + i" [attr.aria-label]="coleccion.singular + ' ' + (i + 1)" pInputText [type]="coleccion.tipo" formControlName="valor" [attr.aria-invalid]="contacto.controls.valor.touched && contacto.controls.valor.invalid"><p-inputgroup-addon [pTooltip]="coleccion.nombre === 'telefonos' ? 'Incluye + y código de país; entre 7 y 15 dígitos. Validación de formato, no de existencia.' : 'Se valida el formato; no se verifica la existencia ni la propiedad del correo.'" tooltipEvent="both" tooltipPosition="top" tabindex="0" role="note" aria-label="Ayuda del campo"><i class="pi" [class.pi-phone]="coleccion.nombre === 'telefonos'" [class.pi-envelope]="coleccion.nombre === 'correos'" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup>
+                        
+                        @if (contacto.controls.valor.touched && contacto.controls.valor.invalid) { <small class="error" role="alert">{{ coleccion.nombre === 'telefonos' ? 'Revisa el teléfono y su código de país.' : 'Ingresa una dirección de correo válida.' }}</small> }
+                      </div>
+                    </td>
+                    <td><p-inputgroup><p-select [inputId]="coleccion.nombre + '-uso-' + i" [ariaLabel]="'Tipo / uso de ' + coleccion.singular + ' ' + (i + 1)" formControlName="uso" [options]="catalogos.usoContacto.opciones" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="No informado" /><p-inputgroup-addon><i class="pi pi-tag" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></td>
+                    <td><p-button type="button" icon="pi pi-trash" size="small" pTooltip="Quitar registro" tooltipEvent="both" [ariaLabel]="'Quitar ' + coleccion.singular + ' ' + (i + 1)" severity="danger" [text]="true" (onClick)="quitarRegistro(coleccion.nombre, i)" /></td>
+                  </tr>
+                </ng-template>
+                <ng-template #emptymessage><tr><td colspan="4">No hay registros. Usa Agregar.</td></tr></ng-template>
+              </p-table>
+            </p-dialog>
+          }
+          <p-dialog header="Direcciones" [visible]="contactoVisible() === 'direcciones'" (visibleChange)="contactoVisible.set($event ? 'direcciones' : null)" [modal]="true" [draggable]="false" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+            <p class="ayuda">Direcciones nacionales o internacionales. Selecciona Chile para habilitar región, provincia y comuna dependientes. Para otros países utiliza ciudad/localidad y los demás componentes de dirección. No se verifica la existencia del domicilio.</p>
+            <p-toolbar aria-label="Acciones de direcciones">
+              <ng-template #start><p-button type="button" icon="pi pi-plus" label="Agregar dirección" (onClick)="agregarDireccion()" /></ng-template>
+              <ng-template #end><p-button type="button" icon="pi pi-times" label="Cerrar" severity="secondary" [outlined]="true" (onClick)="contactoVisible.set(null)" /></ng-template>
+            </p-toolbar>
+            <p-table class="tabla-modal tabla-direcciones" [value]="formulario.controls.direcciones.controls" [scrollable]="true" [tableStyle]="{ 'min-width': '48rem', 'table-layout': 'fixed' }" size="small">
+              <ng-template #header><tr><th>Principal</th><th>Dirección</th><th>Acciones</th></tr></ng-template>
+              <ng-template #body let-direccion let-i="rowIndex">
+                <tr [formGroup]="direccion" [class.fila-principal]="direccion.controls.principal.value">
+                  <td><p-toggleswitch [formControl]="direccion.controls.principal" (onChange)="marcarPrincipal('direcciones', i)" [ariaLabel]="'Marcar dirección ' + (i + 1) + ' como principal'" pTooltip="Selecciona otro registro para cambiar el principal." tooltipEvent="both" /></td>
+                  <td>
+                  <div class="campos">
+                    <div class="campo"><label [for]="'pais-' + i">País</label><p-inputgroup><p-select [inputId]="'pais-' + i" formControlName="pais" [options]="catalogos.paises.opciones" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="No informado" (onChange)="cambiarTerritorio(i, 'pais')" /><p-inputgroup-addon><i class="pi pi-globe" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'uso-direccion-' + i">Tipo / uso</label><p-inputgroup><p-select [inputId]="'uso-direccion-' + i" formControlName="uso" [options]="catalogos.usoDireccion.opciones" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="No informado" /><p-inputgroup-addon><i class="pi pi-tag" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'region-' + i">Región</label><p-inputgroup><p-select [inputId]="'region-' + i" formControlName="region" [options]="catalogos.regiones.opciones" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="No informado" (onChange)="cambiarTerritorio(i, 'region')" /><p-inputgroup-addon><i class="pi pi-map-marker" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'provincia-' + i">Provincia</label><p-inputgroup><p-select [inputId]="'provincia-' + i" formControlName="provincia" [options]="provinciasDisponibles(i)" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="No informado" (onChange)="cambiarTerritorio(i, 'provincia')" /><p-inputgroup-addon><i class="pi pi-map-marker" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'comuna-' + i">Comuna</label><p-inputgroup><p-select [inputId]="'comuna-' + i" formControlName="comuna" [options]="comunasDisponibles(i)" optionLabel="nombre" optionValue="id" [filter]="true" filterBy="nombre,codigo" appendTo="body" placeholder="No informado" /><p-inputgroup-addon><i class="pi pi-map-marker" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'localidad-' + i">Ciudad / localidad</label><p-inputgroup><input [id]="'localidad-' + i" pInputText formControlName="localidad"><p-inputgroup-addon><i class="pi pi-building" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'calle-' + i">Calle / vía</label><p-inputgroup><input [id]="'calle-' + i" pInputText formControlName="calle"><p-inputgroup-addon><i class="pi pi-map" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'numero-' + i">Número</label><p-inputgroup><input [id]="'numero-' + i" pInputText formControlName="numero"><p-inputgroup-addon><i class="pi pi-hashtag" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'unidad-' + i">Departamento / unidad / complemento</label><p-inputgroup><input [id]="'unidad-' + i" pInputText formControlName="unidad"><p-inputgroup-addon><i class="pi pi-home" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                    <div class="campo"><label [for]="'postal-' + i">Código postal</label><p-inputgroup><input [id]="'postal-' + i" pInputText formControlName="codigoPostal"><p-inputgroup-addon><i class="pi pi-envelope" aria-hidden="true"></i></p-inputgroup-addon></p-inputgroup></div>
+                  </div>
+                  </td>
+                  <td><p-button type="button" icon="pi pi-trash" size="small" pTooltip="Quitar dirección" tooltipEvent="both" [ariaLabel]="'Quitar dirección ' + (i + 1)" severity="danger" [text]="true" (onClick)="quitarRegistro('direcciones', i)" /></td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage><tr><td colspan="3">No hay direcciones. Usa Agregar dirección.</td></tr></ng-template>
+            </p-table>
+          </p-dialog>
+</form>

@@ -1,0 +1,34 @@
+<div class="acceso">
+  <section class="presentacion" aria-label="KUMARA · Plataforma Integral de Gestión Clínica">
+    <a class="marca" href="/"><img class="logo" src="/img/logo.png" alt="Sinapsys" width="640" height="551"><span class="marca-detalle"><strong>KUMARA</strong><span>Plataforma Integral de Gestión Clínica</span></span></a>
+    <div class="mensaje">
+      <span class="etiqueta">Tecnología al servicio de las personas</span>
+      <h1>Las personas,<br>en el centro<br>de la atención.</h1>
+      <p>Un espacio de trabajo integrado para acompañar cada etapa del cuidado.</p>
+      <div class="linea"></div>
+      <span class="pie-mensaje">Registro clínico · Interoperabilidad · Protección de datos</span>
+    </div>
+    <span class="entorno">Entorno de desarrollo · Acceso restringido</span>
+  </section>
+  <main class="panel-acceso">
+    <div class="formulario">
+      <span class="etiqueta">BIENVENIDO A KUMARA</span>
+      <h2>Iniciar sesión</h2>
+      <p class="descripcion">Ingresa con tu cuenta para acceder a la plataforma.</p>
+      <form [formGroup]="formulario" (ngSubmit)="ingresar()">
+        <div class="campo">
+          <label for="usuario">Nombre de usuario</label>
+          <input pInputText id="usuario" formControlName="nombreUsuario" autocomplete="username" placeholder="Tu nombre de usuario" [attr.aria-invalid]="formulario.controls.nombreUsuario.touched && formulario.controls.nombreUsuario.invalid">
+        </div>
+        <div class="campo">
+          <label for="clave">Contraseña</label>
+          <input pInputText id="clave" type="password" formControlName="clave" autocomplete="current-password" placeholder="Ingresa tu contraseña" [attr.aria-invalid]="formulario.controls.clave.touched && formulario.controls.clave.invalid">
+        </div>
+        @if (error()) { <p-message severity="error" role="alert">{{ error() }}</p-message> }
+        <p-button type="submit" label="Ingresar a la plataforma" [loading]="enviando()" [disabled]="formulario.invalid || enviando()" styleClass="boton-completo" />
+      </form>
+      <div class="nota"><span aria-hidden="true">◇</span><p>Acceso exclusivo para usuarios autorizados. Si necesitas una cuenta, contacta al administrador.</p></div>
+    </div>
+    <footer>KUMARA · Plataforma Integral de Gestión Clínica</footer>
+  </main>
+</div>

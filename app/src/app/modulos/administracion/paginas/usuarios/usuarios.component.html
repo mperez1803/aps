@@ -1,0 +1,30 @@
+<div class="cabecera-pagina"><span class="sobretitulo">ADMINISTRACIÓN / USUARIOS</span><h1>Usuarios</h1><p>Administra las cuentas y el rol asignado a cada usuario de la plataforma.</p></div>
+@if (error()) { <p-message severity="error" role="alert">{{ error() }}</p-message><p-button label="Actualizar datos" [text]="true" (onClick)="cargar()" /> }
+@if (aviso()) { <p-message severity="success" role="status">{{ aviso() }}</p-message> }
+<div class="paneles">
+  <p-card>
+    <p-toolbar aria-label="Acciones de usuarios">
+      <ng-template #start><p-button label="Nuevo usuario" icon="pi pi-plus" [disabled]="guardando()" (onClick)="nuevo()" /></ng-template>
+      <ng-template #end><p-button label="Actualizar" icon="pi pi-refresh" [text]="true" [disabled]="guardando() || cargando()" (onClick)="cargar()" /></ng-template>
+    </p-toolbar>
+    <p-table [value]="usuarios()" [loading]="cargando()" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '28rem' }">
+      <ng-template #header><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th><span class="solo-lectores">Acciones</span></th></tr></ng-template>
+      <ng-template #body let-usuario><tr><td><strong>{{ usuario.nombreUsuario }}</strong></td><td>{{ usuario.rol.nombre }}</td><td><p-tag [value]="usuario.activo ? 'Activo' : 'Inactivo'" [severity]="usuario.activo ? 'success' : 'secondary'" /></td><td><p-button label="Editar" icon="pi pi-pencil" size="small" [text]="true" [disabled]="guardando()" (onClick)="editar(usuario)" /></td></tr></ng-template>
+      <ng-template #emptymessage><tr><td colspan="4">No hay usuarios para mostrar.</td></tr></ng-template>
+    </p-table>
+  </p-card>
+  <p-dialog [header]="editando() ? 'Modificar usuario' : 'Nuevo usuario'" [visible]="modalVisible()" (visibleChange)="modalVisible.set($event)" [modal]="true" [closable]="!guardando()" [closeOnEscape]="!guardando()" [draggable]="false" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+    <form [formGroup]="formulario" (ngSubmit)="guardarUsuario()">
+      <p-toolbar aria-label="Acciones del formulario de usuario">
+        <ng-template #start><p-button type="submit" [label]="editando() ? 'Modificar' : 'Guardar'" [icon]="editando() ? 'pi pi-pencil' : 'pi pi-save'" [loading]="guardando()" [disabled]="formulario.invalid || guardando()" /></ng-template>
+        <ng-template #end><p-button type="button" label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" [disabled]="guardando()" (onClick)="modalVisible.set(false)" /></ng-template>
+      </p-toolbar>
+      @if (errorModal()) { <p-message severity="error" role="alert">{{ errorModal() }}</p-message> }
+      <p class="ayuda">Los cambios de rol, estado o contraseña invalidan las sesiones del usuario.</p>
+      <div class="campo"><label for="nombreUsuario">Nombre de usuario</label><input id="nombreUsuario" pInputText formControlName="nombreUsuario" autocomplete="off"><small>3–60 letras, números, puntos o guiones.</small></div>
+      <div class="campo"><label for="claveNueva">{{ editando() ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</label><input id="claveNueva" type="password" pInputText formControlName="clave" autocomplete="new-password"><small>Entre 6 y 128 caracteres.</small></div>
+      <div class="campo"><label for="rolUsuario">Rol</label><p-select inputId="rolUsuario" formControlName="rolId" [options]="roles()" optionLabel="nombre" optionValue="id" placeholder="Selecciona un rol" appendTo="body" /></div>
+      @if (editando()) { <label class="estado"><input type="checkbox" formControlName="activo"> Usuario activo</label> }
+    </form>
+  </p-dialog>
+</div>

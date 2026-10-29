@@ -1,0 +1,27 @@
+:host { display: block; min-height: 100dvh; }
+.acceso { display: grid; grid-template-columns: 1fr 1fr; min-height: 100dvh; }
+.presentacion { padding: 3rem 4rem 2rem; background: radial-gradient(ellipse at 0% 100%, #197d79 0, transparent 65%), #102e37; color: white; display: flex; flex-direction: column; }
+.marca { color: white; display: flex; align-items: center; gap: 1.25rem; text-decoration: none; flex-wrap: wrap; }
+.logo { display: block; width: 7rem; max-width: 100%; height: auto; object-fit: contain; flex-shrink: 0; }
+.marca-detalle { display: grid; gap: .55rem; border-left: 1px solid #ffffff50; padding-left: 1.25rem; flex: 1; min-width: 10rem; }
+.marca-detalle strong { font-size: clamp(1.8rem, 3vw, 2.5rem); letter-spacing: .12em; font-weight: 800; line-height: 1.1; }
+.marca-detalle > span { font-size: .75rem; line-height: 1.6; color: #bdd9db; font-weight: 500; }
+.mensaje { margin: auto 0; padding: 4rem 0; max-width: 32rem; }
+.etiqueta { font-size: .7rem; font-weight: 750; letter-spacing: .14em; color: #16776e; }
+.presentacion .etiqueta { color: #80dfce; }
+h1 { font-size: clamp(2.5rem, 4vw, 4.5rem); line-height: 1.12; letter-spacing: -.05em; margin: 1.6rem 0; font-weight: 600; }
+.mensaje p { font-size: 1.05rem; line-height: 1.8; color: #c1dcdf; max-width: 25rem; }
+.linea { width: 3rem; height: 3px; background: #61cdb9; margin: 2rem 0; }
+.pie-mensaje, .entorno { font-size: .73rem; color: #bdd9db; line-height: 1.8; }
+.panel-acceso { padding: 3rem; display: flex; flex-direction: column; justify-content: center; background: #fcfdfd; }
+.formulario { width: 100%; max-width: 25rem; margin: auto; }
+h2 { color: #19333e; font-size: 2rem; letter-spacing: -.04em; margin: .8rem 0; }
+.descripcion { color: #6b7b85; line-height: 1.7; margin: 0 0 2.5rem; }
+form { display: grid; gap: 1.4rem; }
+.campo { display: grid; gap: .6rem; }
+label { font-size: .84rem; font-weight: 600; color: #344955; }
+input { width: 100%; padding: .9rem; }
+.nota { display: flex; gap: .8rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e6ecee; color: #73828b; font-size: .78rem; line-height: 1.7; }
+.nota p { margin: 0; }
+footer { text-align: center; color: #88969d; font-size: .7rem; padding-top: 2rem; }
+@media (max-width: 800px) { .acceso { grid-template-columns: 1fr; } .presentacion { padding: 1.5rem; } .mensaje, .entorno { display: none; } .panel-acceso { padding: 2.5rem 1.5rem; min-height: calc(100dvh - 5.5rem); } }

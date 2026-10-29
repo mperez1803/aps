@@ -1,0 +1,12 @@
+<section>
+  <div class="cabecera-pagina"><span class="sobretitulo">ESPACIO DE TRABAJO / ADMISIÓN</span><h1>{{ titulo() }}</h1><p>La identidad y la información de cada persona, en un solo lugar.</p></div>
+  <p-button label="Ingresos · Registro unificado" routerLink="/admision/ingresos" />
+  <div class="bienvenida"><div><span class="insignia">MÓDULO DE ADMISIÓN</span><h2>Una atención conectada<br>empieza con las personas.</h2><p>Identificación, datos de contacto y vínculos para acompañar el cuidado con información consistente.</p></div><span class="simbolo" aria-hidden="true">+</span></div>
+  <div class="seccion"><h2>Áreas de trabajo</h2><span>Preparando el módulo</span></div>
+  <div class="areas">
+    @for (area of areas(); track area.nombre) {
+      <p-card><span class="icono-area" aria-hidden="true">{{ area.simbolo }}</span><h3>{{ area.nombre }}</h3><p>{{ area.descripcion }}</p><span class="pendiente">En preparación</span></p-card>
+    }
+  </div>
+  <div class="nota"><span aria-hidden="true">◇</span><p><strong>Registro clínico con identidad confiable.</strong> Las funciones de Admisión se habilitarán progresivamente. No se muestran estadísticas ni registros simulados.</p></div>
+</section>

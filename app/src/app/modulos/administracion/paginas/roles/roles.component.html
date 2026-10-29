@@ -1,0 +1,32 @@
+<div class="cabecera-pagina"><span class="sobretitulo">ADMINISTRACIÓN / ROLES</span><h1>Roles</h1><p>Consulta los cinco roles del sistema y edita sus nombres de presentación.</p></div>
+@if (error()) { <p-message severity="error" role="alert">{{ error() }}</p-message> }
+@if (aviso()) { <p-message severity="success" role="status">{{ aviso() }}</p-message> }
+<p-toolbar aria-label="Acciones del mantenedor de roles">
+  <ng-template #start><strong>Roles de la plataforma</strong></ng-template>
+  <ng-template #end>
+    <p-button label="Actualizar" severity="secondary" [text]="true" [disabled]="cargando()" (onClick)="cargar()" />
+  </ng-template>
+</p-toolbar>
+<p-card>
+  <p-table [value]="roles()" [loading]="cargando()" [paginator]="true" [rows]="10" dataKey="id" [tableStyle]="{ 'min-width': '32rem' }">
+    <ng-template #header><tr><th>Nombre</th><th>Código</th><th>Acciones</th></tr></ng-template>
+    <ng-template #body let-rol>
+      <tr><td>{{ rol.nombre }}</td><td>{{ rol.codigo }}</td>
+        <td><p-button label="Editar" size="small" [text]="true" [ariaLabel]="'Editar rol ' + rol.nombre" (onClick)="editar(rol)" /></td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage><tr><td colspan="3">No hay roles para mostrar.</td></tr></ng-template>
+  </p-table>
+  <p class="ayuda">Catálogo fijo: Super, Administrador, Usuario, Paciente y Tutor. No se crean ni eliminan roles. Los códigos conservan sus permisos aunque cambie el nombre. Paciente y Tutor no otorgan acceso clínico por sí solos.</p>
+</p-card>
+<p-dialog header="Editar rol" [visible]="modalVisible()" (visibleChange)="modalVisible.set($event)" [modal]="true" [closable]="!guardando()" [closeOnEscape]="!guardando()" [draggable]="false" [style]="{ width: '40vw', maxWidth: '95vw' }" [breakpoints]="{ '960px': '95vw' }">
+  <form [formGroup]="formulario" (ngSubmit)="guardar()">
+    <p-toolbar aria-label="Acciones del formulario de rol">
+      <ng-template #start><p-button type="submit" label="Modificar" icon="pi pi-pencil" [loading]="guardando()" [disabled]="formulario.invalid || guardando()" /></ng-template>
+      <ng-template #end><p-button type="button" label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" [disabled]="guardando()" (onClick)="modalVisible.set(false)" /></ng-template>
+    </p-toolbar>
+    <div class="campo"><label for="nombreRol">Nombre</label><input id="nombreRol" pInputText formControlName="nombre" maxlength="80" [attr.aria-invalid]="formulario.controls.nombre.touched && formulario.controls.nombre.invalid"></div>
+    <div class="campo"><label for="codigoRol">Código</label><input id="codigoRol" pInputText [value]="editando()?.codigo ?? ''" readonly><small>El código es inmutable para conservar su significado y permisos.</small></div>
+    @if (errorModal()) { <p-message severity="error" role="alert">{{ errorModal() }}</p-message> }
+  </form>
+</p-dialog>

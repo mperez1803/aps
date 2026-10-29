@@ -1,0 +1,5 @@
+p-toolbar, p-card { display: block; margin-top: 1.5rem; }
+.acciones, .pie-modal { display: flex; flex-wrap: wrap; gap: .5rem; }
+.pie-modal { justify-content: flex-end; margin-top: 1rem; }
+form { display: grid; gap: 1.2rem; }
+.ayuda, small { color: #7d8f99; font-size: .75rem; line-height: 1.8; }

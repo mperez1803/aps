@@ -1,0 +1,25 @@
+@import 'primeicons/primeicons.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  margin: 0;
+  min-width: 20rem;
+  background: #f3f6f8;
+  color: #233e4b;
+}
+
+button, input, select { font: inherit; }
+a, button, input { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid #289e8b; outline-offset: 3px; }
+.boton-completo { width: 100%; justify-content: center; }
+.cabecera-pagina { margin-bottom: 2rem; }
+.sobretitulo { color: #728894; font-size: .67rem; letter-spacing: .13em; font-weight: 700; }
+.cabecera-pagina h1 { font-size: 1.85rem; letter-spacing: -.04em; font-weight: 650; margin: .6rem 0; color: #1d3946; }
+.cabecera-pagina p { color: #788b96; font-size: .88rem; line-height: 1.7; margin: 0; }
+.campo { display: grid; gap: .5rem; }
+.campo label { font-size: .78rem; font-weight: 600; color: #4d626e; }
+.campo input, .campo .p-select { width: 100%; }
