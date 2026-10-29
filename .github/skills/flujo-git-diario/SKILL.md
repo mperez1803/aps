@@ -33,16 +33,16 @@ Trabaja de forma segura en una rama diaria y conserva el control del usuario sob
 
 ## Finalización y revisión
 
-1. Resume los cambios y las validaciones ejecutadas, y comprueba el estado final con `git status`.
-2. Deja el trabajo en la rama diaria para revisión.
-3. No hagas merge/rebase hacia `main` o `master` ni push sin aprobación explícita del usuario.
-4. Después de una integración autorizada, elimina la rama diaria local y remota únicamente cuando se verifique todo lo siguiente: el árbol de trabajo está limpio; la rama diaria no tiene commits exclusivos frente a `main`; y el commit integrado está contenido tanto en `main` local como en `origin/main`. El usuario autoriza esta limpieza condicional como parte del flujo. Si `main` no se ha publicado o no se puede comprobar el remoto, no elimines ninguna rama.
-5. Antes de borrar la rama local, cámbiate a `main` y confirma que no estás eliminando la rama activa. Borra la rama remota solo después de comprobar que su referencia apunta a un commit ya contenido en `origin/main`. Si cualquier comprobación falla, conserva la rama y explica el motivo.
-6. Si el usuario solicita integrar, confirma que la rama destino es la correcta y que las validaciones están completas. Si hay cambios ajenos, divergencias o conflictos, detente y solicita instrucciones; no fuerces la integración.
+1. Valida los cambios pertinentes y comprueba `git status`, la rama activa, `main` y su relación de ancestros con la rama diaria.
+2. Si el usuario está en una rama diaria `work/YYYY-MM-DD`, el árbol está limpio y `main` es ancestro de la rama diaria, cambia a `main` y actualízala localmente con `git merge --ff-only <rama-diaria>`.
+3. Si la rama diaria ya es ancestro de `main`, informa que los cambios ya están integrados y no repitas el merge.
+4. Si hay cambios sin confirmar, divergencia, conflictos, no se puede identificar `main`, o el avance fast-forward no es posible, detente y consulta al usuario. No fuerces el merge ni crees un commit de merge automáticamente.
+5. No hagas push ni elimines ramas locales o remotas al cerrar. El usuario sincronizará `main` y borrará las ramas manualmente.
+6. Informa si `main` quedó actualizado solo localmente, el resultado de las validaciones y la rama diaria que permanece para su limpieza manual.
 
 ## Seguridad de Git
 
 - Nunca uses `git reset --hard`, `git clean`, `git push --force` ni comandos equivalentes que descarten o sobrescriban trabajo.
-- No integres directamente a la rama principal por conveniencia o de manera implícita.
-- El permiso condicional para limpiar ramas solo aplica después de verificar que `main` local y remota preservan los commits integrados. No implica autorización para publicar `main`: el push requiere aprobación explícita.
+- La integración fast-forward de la rama diaria en `main` local al recibir `Bye` está autorizada por el usuario, siempre que se cumplan las comprobaciones anteriores.
+- No publiques `main` ni borres ramas; esas acciones quedan a cargo del usuario.
 - Explica cualquier bloqueo con el estado concreto observado y espera autorización antes de realizar una operación que pueda afectar trabajo existente.
