@@ -23,6 +23,7 @@ Estas reglas aplican a todo KUMARA. Las instrucciones más específicas en `api/
 - Si GitHub Desktop requiere iniciar sesión, cambiar de cuenta o autorizar acceso, solicita al usuario que complete esa acción y espera confirmación; no intentes leer, introducir ni sustituir credenciales. Si la identidad o el acceso de escritura no se pueden verificar, no hagas push ni continúes con operaciones remotas.
 - Antes de crear o cambiar de rama, inspecciona el estado del árbol, la rama actual y la rama principal (`main` o `master`). Si hay cambios previos sin guardar, conflictos, una rama diaria con trabajo no integrado, o no se puede identificar con certeza la rama base, detente y consulta al usuario. No ocultes, muevas ni sobrescribas cambios por cuenta propia.
 - Cuando el usuario cierre la jornada diciendo `Bye`, valida el trabajo realizado y deja la rama preparada para revisión. No integres a `main`/`master`, no hagas push y no elimines ramas sin aprobación explícita del usuario.
+- Tras una integración autorizada, conserva la rama diaria hasta verificar que todos sus commits están contenidos en `main` local y en `origin/main`, que el árbol de trabajo está limpio y que la rama diaria no contiene commits exclusivos. Solo entonces elimina la rama diaria local y remota; si alguna comprobación falla, consérvala y avisa. El push de `main` sigue requiriendo autorización explícita.
 
 ## Aplicación web
 
